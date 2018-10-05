@@ -2,7 +2,7 @@ FROM huggla/alpine-official:20181005-edge as alpine
 
 ARG PG_MAJOR="10"
 ARG PG_VERSION="10.5"
-ARG BUILDDEPS="python3-dev bison coreutils dpkg-dev dpkg flex gcc libc-dev libedit-dev libxml2-dev libxslt-dev make libressl-dev perl-utils perl-ipc-run util-linux-dev zlib-dev openldap-dev"
+ARG BUILDDEPS="bison coreutils dpkg-dev dpkg flex gcc libc-dev libedit-dev libxml2-dev libxslt-dev make libressl-dev perl-utils perl-ipc-run util-linux-dev zlib-dev openldap-dev"
 
 RUN downloadDir="$(mktemp -d)" \
  && wget -O $downloadDir/postgresql.tar.bz2 "http://ftp.postgresql.org/pub/source/v$PG_VERSION/postgresql-$PG_VERSION.tar.bz2" \
@@ -15,7 +15,7 @@ RUN downloadDir="$(mktemp -d)" \
  && apk --no-cache add $BUILDDEPS \
  && mkdir -p /usr/local/include \
  && cd "$buildDir" \
- && ./configure --build="$(dpkg-architecture --query DEB_BUILD_GNU_TYPE)" --enable-integer-datetimes --enable-thread-safety --enable-tap-tests --disable-rpath --with-uuid=e2fs --with-gnu-ld --with-pgport=5432 --prefix=/usr/local --with-includes=/usr/local/include --with-libraries=/usr/local/lib --with-openssl --with-libxml --with-libxslt --with-ldap --with-python PYTHON='/usr/bin/python3.6' \
+ && ./configure --build="$(dpkg-architecture --query DEB_BUILD_GNU_TYPE)" --enable-integer-datetimes --enable-thread-safety --enable-tap-tests --disable-rpath --with-uuid=e2fs --with-gnu-ld --with-pgport=5432 --prefix=/usr/local --with-includes=/usr/local/include --with-libraries=/usr/local/lib --with-openssl --with-libxml --with-libxslt --with-ldap \
  && make -j "$(nproc)" world \
  && make install-world \
  && destDir="/apps/postgres" \
