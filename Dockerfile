@@ -1,4 +1,3 @@
-FROM huggla/freetds:1.00.103 as freetds
 FROM huggla/alpine-official:20181005-edge as alpine
 
 ARG CONFIG_DIR="/etc/postgres"
@@ -14,43 +13,23 @@ RUN downloadDir="$(mktemp -d)" \
  && sed -i 's|#define DEFAULT_PGSOCKET_DIR  "/tmp"|#define DEFAULT_PGSOCKET_DIR  "/var/run/postgresql"|g' "$buildDir/src/include/pg_config_manual.h" \
  && wget -O "$buildDir/config/config.guess" 'https://git.savannah.gnu.org/gitweb/?p=config.git;a=blob_plain;f=config.guess' \
  && wget -O "$buildDir/config/config.sub" 'https://git.savannah.gnu.org/gitweb/?p=config.git;a=blob_plain;f=config.sub' \
- && apk add --no-cache $BUILDDEPS \
+ && apk --no-cache add $BUILDDEPS \
+ && mkdir -p /usr/local/include \
  && cd "$buildDir" \
  && ./configure --build="$(dpkg-architecture --query DEB_BUILD_GNU_TYPE)" --enable-integer-datetimes --enable-thread-safety --enable-tap-tests --disable-rpath --with-uuid=e2fs --with-gnu-ld --with-pgport=5432 --prefix=/usr/local --with-includes=/usr/local/include --with-libraries=/usr/local/lib --with-openssl --with-libxml --with-libxslt --with-ldap --with-python PYTHON='/usr/bin/python3.6' \
  && make -j "$(nproc)" world \
  && make install-world \
- && make -C contrib install \
- 
-
-# && mkdir -p /usr/local/include \
-
- && rm -rf * \
- && git clone https://github.com/tds-fdw/tds_fdw.git \
- && cd tds_fdw \
+ && destDir="/apps/postgres" \
+ && mkdir -p $destDir $destDir-dev \
+ && make -C contrib -j1 DESTDIR="$destDir" install \
  && runDeps="$(scanelf --needed --nobanner --format '%n#p' --recursive /usr/local | tr ',' '\n' | sort -u | awk 'system("[ -e /usr/local/lib/" $1 " ]") == 0 { next } { print "so:" $1 }' )" \
- && apk add --no-cache --virtual .postgresql-rundeps $runDeps \
- && make USE_PGXS=1 \
- && make USE_PGXS=1 install \
- && apk del .build-deps \
+ && apk --no-cache add $runDeps \
+ && apk --no-cache --purge del $BUILDDEPS $runDeps \
  && cd / \
- && rm -rf "$buildDir" /usr/local/share/doc /usr/local/share/man \
- && find /usr/local -name '*.a' -delete \
- && sed -ri "s!^#?(listen_addresses)\s*=\s*\S+.*!\1 = '*'!" /usr/local/share/postgresql/postgresql.conf.sample
+ && rm -rf "$buildDir" $destDir/usr/local/share/doc $destDir/usr/local/share/man \
+ && find $destDir/usr/local -name '*.a' -delete \
+ && sed -ri "s!^#?(listen_addresses)\s*=\s*\S+.*!\1 = '*'!" $destDir/usr/local/share/postgresql/postgresql.conf.sample 
 
-ENV VAR_LINUX_USER="postgres" \
-    VAR_CONFIG_FILE="$CONFIG_DIR/postgresql.conf" \
-    VAR_LOCALE="en_US.UTF-8" \
-    VAR_ENCODING="UTF8" \
-    VAR_TEXT_SEARCH_CONFIG="english" \
-    VAR_HBA="local all all trust, host all all 127.0.0.1/32 trust, host all all ::1/128 trust, host all all all md5" \
-    VAR_CREATE_EXTENSION_PGAGENT="yes" \
-    VAR_param_data_directory="'/pgdata'" \
-    VAR_param_hba_file="'$CONFIG_DIR/pg_hba.conf'" \
-    VAR_param_ident_file="'$CONFIG_DIR/pg_ident.conf'" \
-    VAR_param_unix_socket_directories="'/var/run/postgresql'" \
-    VAR_param_listen_addresses="'*'" \
-    VAR_param_timezone="'UTC'" \
-    VAR_FINAL_COMMAND="/usr/local/bin/postgres --config_file=\"\$VAR_CONFIG_FILE\"" \
-    VAR_FREETDS_CONF="[global]\ntds version=auto\ntext size=64512"
+FROM scratch as image
 
-USER starter
+COPY --from=alpine /apps /
