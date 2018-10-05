@@ -1,6 +1,5 @@
 FROM huggla/alpine-official:20181005-edge as alpine
 
-ARG CONFIG_DIR="/etc/postgres"
 ARG PG_MAJOR="10"
 ARG PG_VERSION="10.5"
 ARG BUILDDEPS="python3-dev bison coreutils dpkg-dev dpkg flex gcc libc-dev libedit-dev libxml2-dev libxslt-dev make libressl-dev perl-utils perl-ipc-run util-linux-dev zlib-dev openldap-dev"
