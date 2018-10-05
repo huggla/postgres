@@ -22,7 +22,7 @@ RUN downloadDir="$(mktemp -d)" \
  && mkdir -p $destDir $destDir-dev \
  && make -C contrib -j1 DESTDIR="$destDir" install \
  && runDeps="$(scanelf --needed --nobanner --format '%n#p' --recursive /usr/local | tr ',' '\n' | sort -u | awk 'system("[ -e /usr/local/lib/" $1 " ]") == 0 { next } { print "so:" $1 }' )" \
- && echo "$runDeps" > /apps/RUNDEPS \
+ && echo "$runDeps" > /apps/RUNDEPS-postgresql \
  && apk --no-cache add $runDeps \
  && apk --no-cache --purge del $BUILDDEPS $runDeps \
  && cd / \
