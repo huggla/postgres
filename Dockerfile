@@ -18,7 +18,7 @@ RUN downloadDir="$(mktemp -d)" \
  && ./configure --build="$(dpkg-architecture --query DEB_BUILD_GNU_TYPE)" --enable-integer-datetimes --enable-thread-safety --enable-tap-tests --disable-rpath --with-uuid=e2fs --with-gnu-ld --with-pgport=5432 --prefix=/usr/local --with-includes=/usr/local/include --with-libraries=/usr/local/lib --with-openssl --with-libxml --with-libxslt --with-ldap \
  && make -j "$(nproc)" world \
  && make install-world \
- && destDir="/apps/postgres" \
+ && destDir="/apps/postgresql" \
  && mkdir -p $destDir $destDir-dev \
  && make -C contrib -j1 DESTDIR="$destDir" install \
  && runDeps="$(scanelf --needed --nobanner --format '%n#p' --recursive /usr/local | tr ',' '\n' | sort -u | awk 'system("[ -e /usr/local/lib/" $1 " ]") == 0 { next } { print "so:" $1 }' )" \
@@ -26,8 +26,8 @@ RUN downloadDir="$(mktemp -d)" \
  && apk --no-cache --purge del $BUILDDEPS $runDeps \
  && cd / \
  && rm -rf "$buildDir" $destDir/usr/local/share/doc $destDir/usr/local/share/man \
- && find $destDir/usr/local -name '*.a' -delete \
- && sed -ri "s!^#?(listen_addresses)\s*=\s*\S+.*!\1 = '*'!" $destDir/usr/local/share/postgresql/postgresql.conf.sample 
+ && find $destDir/usr/local -name '*.a' -delete
+# && sed -ri "s!^#?(listen_addresses)\s*=\s*\S+.*!\1 = '*'!" $destDir/usr/local/share/postgresql/postgresql.conf.sample 
 
 FROM scratch as image
 
