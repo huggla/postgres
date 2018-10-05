@@ -19,7 +19,7 @@ RUN downloadDir="$(mktemp -d)" \
  && ./configure --build="$(dpkg-architecture --query DEB_BUILD_GNU_TYPE)" --enable-integer-datetimes --enable-thread-safety --enable-tap-tests --disable-rpath --with-uuid=e2fs --with-gnu-ld --with-pgport=5432 --prefix=/usr/local --with-includes=/usr/local/include --with-libraries=/usr/local/lib --with-openssl --with-libxml --with-libxslt --with-ldap \
  && make -j "$(nproc)" world \
  && make install-world \
- && mkdir -p $DESTDIR $DESTDIR-dev \
+ && mkdir -p $DESTDIR-dev \
  && make -C contrib install \
  && runDeps="$(scanelf --needed --nobanner --format '%n#p' --recursive /usr/local | tr ',' '\n' | sort -u | awk 'system("[ -e /usr/local/lib/" $1 " ]") == 0 { next } { print "so:" $1 }' )" \
  && echo "$runDeps" > /apps/RUNDEPS-postgresql \
