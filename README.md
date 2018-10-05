@@ -1,2 +1,2 @@
-# postgres
-Postgres application files.
+# postgresql
+Postgresql application files.
